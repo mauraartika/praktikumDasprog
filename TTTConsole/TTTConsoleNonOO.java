@@ -4,6 +4,8 @@ import java.util.Scanner;
  * All variables/methods are declared as static (i.e., class)
  *  in this non-OO version.
  */
+
+// kelas cuy
 public class TTTConsoleNonOO {
     // Define named constants for:
     //  1. Player: using CROSS and NOUGHT
