@@ -1,12 +1,9 @@
-import java.util.Scanner;
-/**
- * Tic-Tac-Toe: Two-player, console-based, non-graphics, non-OO version.
- * All variables/methods are declared as static (i.e., class)
- *  in this non-OO version.
- */
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-// kelas cuy
-public class TTTConsoleNonOO {
+public class TTTConsoleNonOO extends JFrame {
     // Define named constants for:
     //  1. Player: using CROSS and NOUGHT
     //  2. Cell contents: using CROSS, NOUGHT and NO_SEED
@@ -14,146 +11,125 @@ public class TTTConsoleNonOO {
     public static final int NOUGHT  = 1;
     public static final int NO_SEED = 2;
 
-    // The game board
-    public static final int ROWS = 3, COLS = 3;  // number of rows/columns
-    public static int[][] board = new int[ROWS][COLS]; // EMPTY, CROSS, NOUGHT
+    // The game board buttons
+    private JButton[][] buttons = new JButton[3][3];
+    private boolean isXTurn = true; // X plays first
+    private boolean isSoloMode = false;
 
-    // The current player
-    public static int currentPlayer;  // CROSS, NOUGHT
-
-    // Define named constants to represent the various states of the game
-    public static final int PLAYING    = 0;
-    public static final int DRAW       = 1;
-    public static final int CROSS_WON  = 2;
-    public static final int NOUGHT_WON = 3;
-    // The current state of the game
-    public static int currentState;
-
-    public static Scanner in = new Scanner(System.in); // the input Scanner
-
-    /** The entry main method (the program starts here) */
+    // The entry main method (the program starts here)
     public static void main(String[] args) {
-        // Initialize the board, currentState and currentPlayer
-        initGame();
-
-        // Play the game once
-        do {
-            // currentPlayer makes a move
-            // Update board[selectedRow][selectedCol] and currentState
-            stepGame();
-            // Refresh the display
-            paintBoard();
-            // Print message if game over
-            if (currentState == CROSS_WON) {
-                System.out.println("'X' won!\nBye!");
-            } else if (currentState == NOUGHT_WON) {
-                System.out.println("'O' won!\nBye!");
-            } else if (currentState == DRAW) {
-                System.out.println("It's a Draw!\nBye!");
-            }
-            // Switch currentPlayer
-            currentPlayer = (currentPlayer == CROSS) ? NOUGHT : CROSS;
-        } while (currentState == PLAYING); // repeat if not game over
+        SwingUtilities.invokeLater(() -> {
+            TTTConsoleNonOO game = new TTTConsoleNonOO();
+            game.setVisible(true);
+        });
     }
 
-    /** Initialize the board[][], currentState and currentPlayer for a new game*/
-    public static void initGame() {
-        for (int row = 0; row < ROWS; ++row) {
-            for (int col = 0; col < COLS; ++col) {
-                board[row][col] = NO_SEED;  // all cells empty
+    /** Constructor sets up the GUI */
+    public TTTConsoleNonOO() {
+        setTitle("Tic Tac Toe");
+        setSize(400, 400);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new GridLayout(3, 3));
+
+        selectGameMode();
+        initBoard();
+    }
+
+    /** Prompt user to select solo or multiplayer mode */
+    private void selectGameMode() {
+        String[] options = {"Solo vs Bot", "Multiplayer"};
+        int choice = JOptionPane.showOptionDialog(this, "Choose Game Mode:", "Game Mode",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+
+        isSoloMode = (choice == 0);
+    }
+
+    /** Initialize the game board */
+    public void initBoard() {
+        Font font = new Font("Arial", Font.BOLD, 60);
+        for (int row = 0; row < 3; ++row) {
+            for (int col = 0; col < 3; ++col) {
+                JButton button = new JButton("");
+                button.setFont(font);
+                button.setFocusPainted(false);
+                button.setForeground(Color.BLACK);
+                button.addActionListener(new CellListener(row, col));
+                buttons[row][col] = button;
+                add(button);
             }
         }
-        currentPlayer = CROSS;   // cross plays first
-        currentState  = PLAYING; // ready to play
     }
 
-    /** The currentPlayer makes one move (one step).
-     Update board[selectedRow][selectedCol] and currentState. */
-    public static void stepGame() {
-        boolean validInput = false;  // for input validation
-        do {
-            if (currentPlayer == CROSS) {
-                System.out.print("Player 'X', enter your move (row[1-3] column[1-3]): ");
+    /** Listener for button clicks */
+    private class CellListener implements ActionListener {
+        private int row, col;
+
+        public CellListener(int row, int col) {
+            this.row = row;
+            this.col = col;
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            JButton button = buttons[row][col];
+            if (!button.getText().equals("")) {
+                return; // already marked
+            }
+
+            button.setText(isXTurn ? "X" : "O");
+            button.setForeground(isXTurn ? Color.RED : Color.BLUE);
+
+            if (checkWin()) {
+                JOptionPane.showMessageDialog(null, (isXTurn ? "X" : "O") + " wins!");
+                resetGame();
+            } else if (isBoardFull()) {
+                JOptionPane.showMessageDialog(null, "It's a draw!");
+                resetGame();
             } else {
-                System.out.print("Player 'O', enter your move (row[1-3] column[1-3]): ");
+                isXTurn = !isXTurn;
+                // Solo mode: skip O turn if bot (not implemented)
             }
-            int row = in.nextInt() - 1;  // array index starts at 0 instead of 1 karena indeks pengguna dimulai dari 1 sedangkan array dari 0
-            int col = in.nextInt() - 1;
-            if (row >= 0 && row < ROWS && col >= 0 && col < COLS
-                    && board[row][col] == NO_SEED) {
-                // Update board[][] and return the new game state after the move
-                currentState = stepGameUpdate(currentPlayer, row, col);
-                validInput = true;  // input okay, exit loop
-            } else {
-                System.out.println("This move at (" + (row + 1) + "," + (col + 1)
-                        + ") is not valid. Try again...");
-            }
-        } while (!validInput);  // repeat if input is invalid
-    }
-
-    /**
-     * Helper function of stepGame().
-     * The given player makes a move at (selectedRow, selectedCol).
-     * Update board[selectedRow][selectedCol]. Compute and return the
-     * new game state (PLAYING, DRAW, CROSS_WON, NOUGHT_WON).
-     * @return new game state
-     */
-    public static int stepGameUpdate(int player, int selectedRow, int selectedCol) {
-        // Update game board
-        board[selectedRow][selectedCol] = player;
-
-        // Compute and return the new game state
-        if (board[selectedRow][0] == player       // 3-in-the-row
-                && board[selectedRow][1] == player
-                && board[selectedRow][2] == player
-                || board[0][selectedCol] == player // 3-in-the-column
-                && board[1][selectedCol] == player
-                && board[2][selectedCol] == player
-                || selectedRow == selectedCol      // 3-in-the-diagonal
-                && board[0][0] == player
-                && board[1][1] == player
-                && board[2][2] == player
-                || selectedRow + selectedCol == 2  // 3-in-the-opposite-diagonal
-                && board[0][2] == player
-                && board[1][1] == player
-                && board[2][0] == player) {
-            return (player == CROSS) ? CROSS_WON : NOUGHT_WON;
-        } else {
-            // Nobody win. Check for DRAW (all cells occupied) or PLAYING.
-            for (int row = 0; row < ROWS; ++row) {
-                for (int col = 0; col < COLS; ++col) {
-                    if (board[row][col] == NO_SEED) {
-                        return PLAYING; // still have empty cells
-                    }
-                }
-            }
-            return DRAW; // no empty cell, it's a draw
         }
     }
 
-    /** Print the game board */
-    public static void paintBoard() {
-        for (int row = 0; row < ROWS; ++row) {
-            for (int col = 0; col < COLS; ++col) {
-                paintCell(board[row][col]); // print each of the cells
-                if (col != COLS - 1) {
-                    System.out.print("|");   // print vertical partition
-                }
-            }
-            System.out.println();
-            if (row != ROWS - 1) {
-                System.out.println("-----------"); // print horizontal partition
-            }
+    /** Check if current player has won */
+    private boolean checkWin() {
+        String player = isXTurn ? "X" : "O";
+
+        for (int i = 0; i < 3; ++i) {
+            if (player.equals(buttons[i][0].getText()) &&
+                    player.equals(buttons[i][1].getText()) &&
+                    player.equals(buttons[i][2].getText())) return true;
+
+            if (player.equals(buttons[0][i].getText()) &&
+                    player.equals(buttons[1][i].getText()) &&
+                    player.equals(buttons[2][i].getText())) return true;
         }
-        System.out.println();
+
+        if (player.equals(buttons[0][0].getText()) &&
+                player.equals(buttons[1][1].getText()) &&
+                player.equals(buttons[2][2].getText())) return true;
+
+        if (player.equals(buttons[0][2].getText()) &&
+                player.equals(buttons[1][1].getText()) &&
+                player.equals(buttons[2][0].getText())) return true;
+
+        return false;
     }
 
-    /** Print a cell having the given content */
-    public static void paintCell(int content) {
-        switch (content) {
-            case CROSS:   System.out.print(" X "); break;
-            case NOUGHT:  System.out.print(" O "); break;
-            case NO_SEED: System.out.print("   "); break;
-        }
+    /** Check if the board is full */
+    private boolean isBoardFull() {
+        for (int row = 0; row < 3; ++row)
+            for (int col = 0; col < 3; ++col)
+                if (buttons[row][col].getText().equals(""))
+                    return false;
+        return true;
+    }
+
+    /** Reset the game board */
+    private void resetGame() {
+        for (int row = 0; row < 3; ++row)
+            for (int col = 0; col < 3; ++col)
+                buttons[row][col].setText("");
+        isXTurn = true;
     }
 }
