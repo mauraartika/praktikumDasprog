@@ -85,7 +85,27 @@ public class GameMain extends JPanel {
       initGame();
       newGame();
    }
+   // START YOSSI
+   private void makeBotMove() {
+      Random rand = new Random();
+      int row, col;
+      // Cari sel kosong secara acak
+      do {
+         row = rand.nextInt(Board.ROWS);
+         col = rand.nextInt(Board.COLS);
+      } while (board.cells[row][col].content != Seed.NO_SEED);
 
+      board.cells[row][col].content = currentPlayer;
+      currentState = board.stepGame(currentPlayer, row, col);
+
+      // Kembalikan ke CROSS jika game belum selesai
+      if (currentState == State.PLAYING) {
+         currentPlayer = Seed.CROSS;
+      }
+
+      repaint();  // update tampilan
+   }
+   // END YOSSI
 
 
    public void initGame() {
