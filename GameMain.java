@@ -53,8 +53,35 @@ public class GameMain extends JPanel {
             int row = mouseY / Cell.SIZE;
             int col = mouseX / Cell.SIZE;
             // START RAE
-         
-            // END RAE
+            // This JPanel fires MouseEvent
+            super.addMouseListener(new MouseAdapter() {
+               @Override
+               public void mouseClicked(MouseEvent e) {
+                  int mouseX = e.getX();
+                  int mouseY = e.getY();
+                  int row = mouseY / Cell.SIZE;
+                  int col = mouseX / Cell.SIZE;
+                  // START RAE
+                  if (currentState == State.PLAYING) {
+                     if (row >= 0 && row < Board.ROWS && col >= 0 && col < Board.COLS
+                             && board.cells[row][col].content == Seed.NO_SEED) {
+                        currentState = board.stepGame(currentPlayer, row, col);
+                        repaint();
+                        if (currentState == State.PLAYING) {
+                           if (gameMode == GameMode.SOLO) {
+                              currentPlayer = Seed.NOUGHT;
+                              makeBotMove(); // Bot main
+                           } else if (gameMode == GameMode.DUO) {
+                              currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
+                           }
+                        }
+                     }
+                  }
+                  else {
+                     newGame();
+                  }
+
+                  // END RAE
 
             repaint();  // Perbarui tampilan
         }
