@@ -1,5 +1,7 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Random;
+
 import javax.swing.*;
 /**
  * Tic-Tac-Toe: Two-player Graphic version with better OO design.
@@ -7,7 +9,7 @@ import javax.swing.*;
  */
 public class GameMain extends JPanel {
    private static final long serialVersionUID = 1L; // to prevent serializable warning
-
+   private GameMode gameMode;
    // Define named constants for the drawing graphics
    public static final String TITLE = "Tic Tac Toe";
    public static final Color COLOR_BG = Color.WHITE;
@@ -24,31 +26,39 @@ public class GameMain extends JPanel {
 
    /** Constructor to setup the UI and game components */
    public GameMain() {
-
+        // START RASYID
+        String [] options = {"Solo (vs. Bot)", "Duo (2 Players)"};
+        int choice = JOptionPane.showOptionDialog(
+                null,
+                "Pilih mode permainan:",
+                "Mode Permainan",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+        if (choice == 0) {
+            gameMode = GameMode.SOLO;
+        } else {
+            gameMode = GameMode.DUO;
+        }
+        // END RASYID
       // This JPanel fires MouseEvent
       super.addMouseListener(new MouseAdapter() {
          @Override
-         public void mouseClicked(MouseEvent e) {  // mouse-clicked handler
+         public void mouseClicked(MouseEvent e) {
             int mouseX = e.getX();
             int mouseY = e.getY();
-            // Get the row and column clicked
             int row = mouseY / Cell.SIZE;
             int col = mouseX / Cell.SIZE;
+            // START RAE
+         
+            // END RAE
 
-            if (currentState == State.PLAYING) {
-               if (row >= 0 && row < Board.ROWS && col >= 0 && col < Board.COLS
-                     && board.cells[row][col].content == Seed.NO_SEED) {
-                  // Update cells[][] and return the new game state after the move
-                  currentState = board.stepGame(currentPlayer, row, col);
-                  // Switch player
-                  currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
-               }
-            } else {        // game over
-               newGame();  // restart the game
-            }
-            // Refresh the drawing canvas
-            repaint();  // Callback paintComponent().
-         }
+            repaint();  // Perbarui tampilan
+        }
+
       });
 
       // Setup the status bar (JLabel) to display status message
@@ -70,6 +80,7 @@ public class GameMain extends JPanel {
       initGame();
       newGame();
    }
+  
 
    /** Initialize the game (run once) */
    public void initGame() {
@@ -110,7 +121,7 @@ public class GameMain extends JPanel {
          statusBar.setText("'O' Won! Click to play again.");
       }
    }
-
+   
    /** The entry "main" method */
    public static void main(String[] args) {
       // Run GUI construction codes in Event-Dispatching thread for thread safety
