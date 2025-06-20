@@ -18,6 +18,11 @@ public class GameMain extends JPanel {
    private State currentState;
    private Seed currentPlayer;
    private JLabel statusBar;
+   private Timer turnTimer;
+   private int timeLeft;
+   private boolean timerEnabled = true;
+   private JComboBox<String> timerSelector;
+
 
    public GameMain() {
       // START RASYID
@@ -58,6 +63,7 @@ public class GameMain extends JPanel {
                         makeBotMove();
                      } else if (gameMode == GameMode.DUO) {
                         currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
+                        startTimerForTurn();
                      }
                   }
                }
@@ -77,22 +83,126 @@ public class GameMain extends JPanel {
       statusBar.setHorizontalAlignment(JLabel.LEFT);
       statusBar.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 12));
 
+      timerSelector = new JComboBox<>(new String[]{"Tanpa Batas", "5", "10", "15", "30"});
+      timerSelector.setSelectedIndex(1); // Default 5 detik
+      timerSelector.addActionListener(e -> {
+         String selected = (String) timerSelector.getSelectedItem();
+         if (selected.equals("Tanpa Batas")) {
+            timerEnabled = false;
+            statusBar.setText("Mode: Tanpa Batas Waktu");
+         } else {
+            timerEnabled = true;
+            timeLeft = Integer.parseInt(selected);
+         }
+      });
+
       super.setLayout(new BorderLayout());
+      super.add(timerSelector, BorderLayout.PAGE_START);
       super.add(statusBar, BorderLayout.PAGE_END);
       super.setPreferredSize(new Dimension(Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT + 30));
       super.setBorder(BorderFactory.createLineBorder(COLOR_BG_STATUS, 2, false));
 
+      turnTimer = new Timer(1000, new ActionListener() {
+         public void actionPerformed(ActionEvent evt) {
+            if (!timerEnabled || currentState != State.PLAYING) return;
+
+            timeLeft--;
+            statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
+
+            if (timeLeft <= 0) {
+               turnTimer.stop();
+               if (gameMode == GameMode.SOLO && currentPlayer == Seed.NOUGHT) {
+                  makeBotMove(); // bot langsung main
+               } else {
+                  // Ganti giliran player manual
+                  currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
+               }
+               repaint();
+               startTimerForTurn(); // reset untuk giliran selanjutnya
+            }
+         }
+      });
       initGame();
       newGame();
    }
-
+   // START YOSSI
    private void makeBotMove() {
       Random rand = new Random();
       int row, col;
+
+<<<<<<< HEAD
+   private void makeBotMove() {
+      Random rand = new Random();
+      int row, col;
+=======
+>>>>>>> yossi
       do {
          row = rand.nextInt(Board.ROWS);
          col = rand.nextInt(Board.COLS);
       } while (board.cells[row][col].content != Seed.NO_SEED);
+<<<<<<< HEAD
+=======
+
+      board.cells[row][col].content = currentPlayer;
+      currentState = board.stepGame(currentPlayer, row, col);
+
+      if (currentState == State.PLAYING) {
+         currentPlayer = Seed.CROSS;
+         startTimerForTurn(); //Mulai timer setelah bot selesai
+      }
+
+      repaint();
+   }
+
+   
+   private void startTimerForTurn() {
+      if (!timerEnabled || currentState != State.PLAYING) {
+         if (turnTimer != null) {
+            turnTimer.stop();
+         }
+         return;
+      }
+
+      String selected = (String) timerSelector.getSelectedItem();
+      if (selected.equals("Tanpa Batas")) {
+         timerEnabled = false;
+         statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - ∞");
+         if (turnTimer != null) {
+            turnTimer.stop();
+         }
+      } else {
+         timerEnabled = true;
+         timeLeft = Integer.parseInt(selected);
+         statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
+
+         if (turnTimer != null) {
+            turnTimer.stop();
+         }
+
+         // Mulai ulang timer
+         turnTimer = new Timer(1000, e -> {
+            timeLeft--;
+            if (timeLeft <= 0) {
+               ((Timer) e.getSource()).stop();
+               statusBar.setText("Waktu habis! Otomatis lewati giliran.");
+               if (gameMode == GameMode.DUO) {
+                  currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
+               } else if (gameMode == GameMode.SOLO && currentPlayer == Seed.CROSS) {
+                  currentPlayer = Seed.NOUGHT;
+                  makeBotMove();
+               }
+               startTimerForTurn();
+               repaint();
+            } else {
+               statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
+            }
+         });
+         turnTimer.start();
+      }
+   }
+
+   // END YOSSI
+>>>>>>> yossi
 
       board.cells[row][col].content = currentPlayer;
       currentState = board.stepGame(currentPlayer, row, col);
@@ -116,6 +226,7 @@ public class GameMain extends JPanel {
       }
       currentPlayer = Seed.CROSS;
       currentState = State.PLAYING;
+      startTimerForTurn();
    }
 
    @Override
