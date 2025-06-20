@@ -130,18 +130,10 @@ public class GameMain extends JPanel {
       Random rand = new Random();
       int row, col;
 
-<<<<<<< HEAD
-   private void makeBotMove() {
-      Random rand = new Random();
-      int row, col;
-=======
->>>>>>> yossi
       do {
          row = rand.nextInt(Board.ROWS);
          col = rand.nextInt(Board.COLS);
       } while (board.cells[row][col].content != Seed.NO_SEED);
-<<<<<<< HEAD
-=======
 
       board.cells[row][col].content = currentPlayer;
       currentState = board.stepGame(currentPlayer, row, col);
@@ -202,17 +194,7 @@ public class GameMain extends JPanel {
    }
 
    // END YOSSI
->>>>>>> yossi
 
-      board.cells[row][col].content = currentPlayer;
-      currentState = board.stepGame(currentPlayer, row, col);
-
-      if (currentState == State.PLAYING) {
-         currentPlayer = Seed.CROSS;
-      }
-
-      repaint();
-   }
 
    public void initGame() {
       board = new Board();
