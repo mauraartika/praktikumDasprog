@@ -28,7 +28,6 @@ public class GameMain extends JPanel {
    public GameMain(Database db, int userId) {
       this.db = db;
       this.userId = userId;
-
       String[] options = { "Solo (vs. Bot)", "Duo (2 Players)" };
       int choice = JOptionPane.showOptionDialog(
             null,
@@ -123,7 +122,45 @@ public class GameMain extends JPanel {
             }
          }
       });
+      timerSelector = new JComboBox<>(new String[]{"Tanpa Batas", "5", "10", "15", "30"});
+      timerSelector.setSelectedIndex(1); // Default 5 detik
+      timerSelector.addActionListener(e -> {
+         String selected = (String) timerSelector.getSelectedItem();
+         if (selected.equals("Tanpa Batas")) {
+            timerEnabled = false;
+            statusBar.setText("Mode: Tanpa Batas Waktu");
+         } else {
+            timerEnabled = true;
+            timeLeft = Integer.parseInt(selected);
+         }
+      });
 
+      super.setLayout(new BorderLayout());
+      super.add(timerSelector, BorderLayout.PAGE_START);
+      super.add(statusBar, BorderLayout.PAGE_END);
+      super.setPreferredSize(new Dimension(Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT + 30));
+      super.setBorder(BorderFactory.createLineBorder(COLOR_BG_STATUS, 2, false));
+
+      turnTimer = new Timer(1000, new ActionListener() {
+         public void actionPerformed(ActionEvent evt) {
+            if (!timerEnabled || currentState != State.PLAYING) return;
+
+            timeLeft--;
+            statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
+
+            if (timeLeft <= 0) {
+               turnTimer.stop();
+               if (gameMode == GameMode.SOLO && currentPlayer == Seed.NOUGHT) {
+                  makeBotMove(); // bot langsung main
+               } else {
+                  // Ganti giliran player manual
+                  currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
+               }
+               repaint();
+               startTimerForTurn(); // reset untuk giliran selanjutnya
+            }
+         }
+      });
       initGame();
       newGame();
    }
@@ -149,9 +186,11 @@ public class GameMain extends JPanel {
       }
    }
 
+   // START YOSSI
    private void makeBotMove() {
       Random rand = new Random();
       int row, col;
+
       do {
          row = rand.nextInt(Board.ROWS);
          col = rand.nextInt(Board.COLS);
@@ -163,10 +202,16 @@ public class GameMain extends JPanel {
       if (currentState == State.PLAYING) {
          currentPlayer = Seed.CROSS;
          startTimerForTurn();
+         startTimerForTurn(); //Mulai timer setelah bot selesai
       }
 
       repaint();
    }
+
+   
+  
+   // END YOSSI
+
 
    public void initGame() {
       board = new Board(db, userId);
@@ -205,13 +250,15 @@ public class GameMain extends JPanel {
    }
 
    public static void main(String[] args) {
+      // Sebaiknya pakai .env atau config luar
       Database db = new Database(
-            "avnadmin",
-            "AVNS_XAq_dChECyhFNeOZM5d",
-            27448,
-            "mysql-1fdc60c4-rasyidbomantoro-project.f.aivencloud.com",
-            "defaultdb"
+         System.getenv("DB_USER"),
+         System.getenv("DB_PASSWORD"),
+         Integer.parseInt(System.getenv("DB_PORT")),
+         System.getenv("DB_HOST"),
+         System.getenv("DB_NAME")
       );
+
       LoginPage lg = new LoginPage();
       lg.displayLogin(db);
    }
