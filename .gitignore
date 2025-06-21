@@ -1,1 +1,7 @@
+
+
+# Ignore VS Code config
 .vscode/
+
+# Ignore sensitive env files
+.env

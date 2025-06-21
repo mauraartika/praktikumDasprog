@@ -2,7 +2,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.Random;
 import javax.swing.*;
-
+import io.github.cdimascio.dotenv.Dotenv;
 public class GameMain extends JPanel {
    private static final long serialVersionUID = 1L;
    private GameMode gameMode;
@@ -24,6 +24,7 @@ public class GameMain extends JPanel {
    private boolean timerEnabled = true;
    private Database db;
    private int userId;
+
 
    public GameMain(Database db, int userId) {
       this.db = db;
@@ -135,7 +136,21 @@ public class GameMain extends JPanel {
          }
       });
 
+      timerSelector = new JComboBox<>(new String[]{"Tanpa Batas", "5", "10", "15", "30"});
+      timerSelector.setSelectedIndex(1); // Default 5 detik
+      timerSelector.addActionListener(e -> {
+         String selected = (String) timerSelector.getSelectedItem();
+         if (selected.equals("Tanpa Batas")) {
+            timerEnabled = false;
+            statusBar.setText("Mode: Tanpa Batas Waktu");
+         } else {
+            timerEnabled = true;
+            timeLeft = Integer.parseInt(selected);
+         }
+      });
+
       super.setLayout(new BorderLayout());
+      super.add(timerSelector, BorderLayout.PAGE_START);
       super.add(timerSelector, BorderLayout.PAGE_START);
       super.add(statusBar, BorderLayout.PAGE_END);
       super.setPreferredSize(new Dimension(Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT + 30));
@@ -161,35 +176,38 @@ public class GameMain extends JPanel {
             }
          }
       });
+      turnTimer = new Timer(1000, new ActionListener() {
+         public void actionPerformed(ActionEvent evt) {
+            if (!timerEnabled || currentState != State.PLAYING) return;
+
+            timeLeft--;
+            statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
+
+            if (timeLeft <= 0) {
+               turnTimer.stop();
+               if (gameMode == GameMode.SOLO && currentPlayer == Seed.NOUGHT) {
+                  makeBotMove(); // bot langsung main
+               } else {
+                  // Ganti giliran player manual
+                  currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
+               }
+               repaint();
+               startTimerForTurn(); // reset untuk giliran selanjutnya
+            }
+         }
+      });
       initGame();
       newGame();
    }
 
-   private void startTimerForTurn() {
-      if (!timerEnabled || currentState != State.PLAYING) {
-         if (turnTimer != null) turnTimer.stop();
-         return;
-      }
+ 
 
-      String selected = (String) timerSelector.getSelectedItem();
-      if (selected.equals("Tanpa Batas")) {
-         timerEnabled = false;
-         statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - ∞");
-         turnTimer.stop();
-      } else {
-         timerEnabled = true;
-         timeLeft = Integer.parseInt(selected);
-         statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
-
-         if (turnTimer != null) turnTimer.stop();
-         turnTimer.start();
-      }
-   }
-
+   // START YOSSI
    // START YOSSI
    private void makeBotMove() {
       Random rand = new Random();
       int row, col;
+
 
       do {
          row = rand.nextInt(Board.ROWS);
@@ -201,7 +219,6 @@ public class GameMain extends JPanel {
 
       if (currentState == State.PLAYING) {
          currentPlayer = Seed.CROSS;
-         startTimerForTurn();
          startTimerForTurn(); //Mulai timer setelah bot selesai
       }
 
@@ -209,7 +226,52 @@ public class GameMain extends JPanel {
    }
 
    
-  
+   private void startTimerForTurn() {
+      if (!timerEnabled || currentState != State.PLAYING) {
+         if (turnTimer != null) {
+            turnTimer.stop();
+         }
+         return;
+      }
+
+      String selected = (String) timerSelector.getSelectedItem();
+      if (selected.equals("Tanpa Batas")) {
+         timerEnabled = false;
+         statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - ∞");
+         if (turnTimer != null) {
+            turnTimer.stop();
+         }
+      } else {
+         timerEnabled = true;
+         timeLeft = Integer.parseInt(selected);
+         statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
+
+         if (turnTimer != null) {
+            turnTimer.stop();
+         }
+
+         // Mulai ulang timer
+         turnTimer = new Timer(1000, e -> {
+            timeLeft--;
+            if (timeLeft <= 0) {
+               ((Timer) e.getSource()).stop();
+               statusBar.setText("Waktu habis! Otomatis lewati giliran.");
+               if (gameMode == GameMode.DUO) {
+                  currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
+               } else if (gameMode == GameMode.SOLO && currentPlayer == Seed.CROSS) {
+                  currentPlayer = Seed.NOUGHT;
+                  makeBotMove();
+               }
+               startTimerForTurn();
+               repaint();
+            } else {
+               statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
+            }
+         });
+         turnTimer.start();
+      }
+   }
+
    // END YOSSI
 
 
@@ -251,12 +313,13 @@ public class GameMain extends JPanel {
 
    public static void main(String[] args) {
       // Sebaiknya pakai .env atau config luar
+      Dotenv dotenv = Dotenv.load();
       Database db = new Database(
-         System.getenv("DB_USER"),
-         System.getenv("DB_PASSWORD"),
-         Integer.parseInt(System.getenv("DB_PORT")),
-         System.getenv("DB_HOST"),
-         System.getenv("DB_NAME")
+       dotenv.get("DB_USER"),
+       dotenv.get("DB_PASSWORD"),
+       Integer.parseInt(dotenv.get("DB_PORT")),
+       dotenv.get("DB_HOST"),
+       dotenv.get("DB_NAME")
       );
 
       LoginPage lg = new LoginPage();
