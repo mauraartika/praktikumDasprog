@@ -18,9 +18,17 @@ public class GameMain extends JPanel {
    private State currentState;
    private Seed currentPlayer;
    private JLabel statusBar;
+   private JComboBox<String> timerSelector;
+   private Timer turnTimer;
+   private int timeLeft;
+   private boolean timerEnabled = true;
+   private Database db;
+   private int userId;
 
-   public GameMain() {
-      // START RASYID
+   public GameMain(Database db, int userId) {
+      this.db = db;
+      this.userId = userId;
+
       String[] options = { "Solo (vs. Bot)", "Duo (2 Players)" };
       int choice = JOptionPane.showOptionDialog(
             null,
@@ -31,14 +39,9 @@ public class GameMain extends JPanel {
             null,
             options,
             options[0]);
-      if (choice == 0) {
-         gameMode = GameMode.SOLO;
-      } else {
-         gameMode = GameMode.DUO;
-      }
-      // END RASYID
+      gameMode = (choice == 0) ? GameMode.SOLO : GameMode.DUO;
 
-      super.addMouseListener(new MouseAdapter() {
+      addMouseListener(new MouseAdapter() {
          @Override
          public void mouseClicked(MouseEvent e) {
             int mouseX = e.getX();
@@ -46,29 +49,44 @@ public class GameMain extends JPanel {
             int row = mouseY / Cell.SIZE;
             int col = mouseX / Cell.SIZE;
 
-            // START RAE
             if (currentState == State.PLAYING) {
-               if (row >= 0 && row < Board.ROWS && col >= 0 && col < Board.COLS
-                     && board.cells[row][col].content == Seed.NO_SEED) {
-                  currentState = board.stepGame(currentPlayer, row, col);
-                  repaint();
+               if (row >= 0 && row < Board.ROWS && col >= 0 && col < Board.COLS &&
+                   board.cells[row][col].content == Seed.NO_SEED) {
+
+                  currentState = board.stepGame(currentPlayer, row, col, gameMode == GameMode.SOLO);
+
                   if (currentState == State.PLAYING) {
                      if (gameMode == GameMode.SOLO) {
                         currentPlayer = Seed.NOUGHT;
                         makeBotMove();
-                     } else if (gameMode == GameMode.DUO) {
+                     } else {
                         currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
+                        startTimerForTurn();
                      }
                   }
                }
             } else {
                newGame();
             }
-            // END RAE
             repaint();
          }
       });
 
+      // Timer Selector
+      timerSelector = new JComboBox<>(new String[]{"Tanpa Batas", "5", "10", "15", "30"});
+      timerSelector.setSelectedIndex(1); // default 5s
+      timerSelector.addActionListener(e -> {
+         String selected = (String) timerSelector.getSelectedItem();
+         if (selected.equals("Tanpa Batas")) {
+            timerEnabled = false;
+            statusBar.setText("Mode: Tanpa Batas Waktu");
+         } else {
+            timerEnabled = true;
+            timeLeft = Integer.parseInt(selected);
+         }
+      });
+
+      // Status Bar
       statusBar = new JLabel();
       statusBar.setFont(FONT_STATUS);
       statusBar.setBackground(COLOR_BG_STATUS);
@@ -77,13 +95,58 @@ public class GameMain extends JPanel {
       statusBar.setHorizontalAlignment(JLabel.LEFT);
       statusBar.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 12));
 
-      super.setLayout(new BorderLayout());
-      super.add(statusBar, BorderLayout.PAGE_END);
-      super.setPreferredSize(new Dimension(Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT + 30));
-      super.setBorder(BorderFactory.createLineBorder(COLOR_BG_STATUS, 2, false));
+      setLayout(new BorderLayout());
+      add(timerSelector, BorderLayout.PAGE_START);
+      add(statusBar, BorderLayout.PAGE_END);
+      setPreferredSize(new Dimension(Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT + 30));
+      setBorder(BorderFactory.createLineBorder(COLOR_BG_STATUS, 2, false));
+
+      // Turn Timer
+      turnTimer = new Timer(1000, new ActionListener() {
+         public void actionPerformed(ActionEvent evt) {
+            if (!timerEnabled || currentState != State.PLAYING) return;
+
+            timeLeft--;
+            statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
+
+            if (timeLeft <= 0) {
+               turnTimer.stop();
+               statusBar.setText("Waktu habis! Otomatis lewati giliran.");
+               if (gameMode == GameMode.DUO) {
+                  currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
+               } else if (gameMode == GameMode.SOLO && currentPlayer == Seed.CROSS) {
+                  currentPlayer = Seed.NOUGHT;
+                  makeBotMove();
+               }
+               startTimerForTurn();
+               repaint();
+            }
+         }
+      });
 
       initGame();
       newGame();
+   }
+
+   private void startTimerForTurn() {
+      if (!timerEnabled || currentState != State.PLAYING) {
+         if (turnTimer != null) turnTimer.stop();
+         return;
+      }
+
+      String selected = (String) timerSelector.getSelectedItem();
+      if (selected.equals("Tanpa Batas")) {
+         timerEnabled = false;
+         statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - ∞");
+         turnTimer.stop();
+      } else {
+         timerEnabled = true;
+         timeLeft = Integer.parseInt(selected);
+         statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
+
+         if (turnTimer != null) turnTimer.stop();
+         turnTimer.start();
+      }
    }
 
    private void makeBotMove() {
@@ -95,17 +158,18 @@ public class GameMain extends JPanel {
       } while (board.cells[row][col].content != Seed.NO_SEED);
 
       board.cells[row][col].content = currentPlayer;
-      currentState = board.stepGame(currentPlayer, row, col);
+      currentState = board.stepGame(currentPlayer, row, col, true);
 
       if (currentState == State.PLAYING) {
          currentPlayer = Seed.CROSS;
+         startTimerForTurn();
       }
 
       repaint();
    }
 
    public void initGame() {
-      board = new Board();
+      board = new Board(db, userId);
    }
 
    public void newGame() {
@@ -116,6 +180,7 @@ public class GameMain extends JPanel {
       }
       currentPlayer = Seed.CROSS;
       currentState = State.PLAYING;
+      startTimerForTurn();
    }
 
    @Override
@@ -140,15 +205,14 @@ public class GameMain extends JPanel {
    }
 
    public static void main(String[] args) {
-      javax.swing.SwingUtilities.invokeLater(new Runnable() {
-         public void run() {
-            JFrame frame = new JFrame(TITLE);
-            frame.setContentPane(new GameMain());
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.pack();
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
-         }
-      });
+      Database db = new Database(
+            "avnadmin",
+            "AVNS_XAq_dChECyhFNeOZM5d",
+            27448,
+            "mysql-1fdc60c4-rasyidbomantoro-project.f.aivencloud.com",
+            "defaultdb"
+      );
+      LoginPage lg = new LoginPage();
+      lg.displayLogin(db);
    }
 }

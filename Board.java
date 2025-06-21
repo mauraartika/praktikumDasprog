@@ -1,4 +1,5 @@
 import java.awt.*;
+
 /**
  * The Board class models the ROWS-by-COLS game board.
  */
@@ -13,13 +14,19 @@ public class Board {
    public static final int GRID_WIDTH_HALF = GRID_WIDTH / 2; // Grid-line's half-width
    public static final Color COLOR_GRID = Color.LIGHT_GRAY;  // grid lines
    public static final int Y_OFFSET = 1;  // Fine tune for better display
+   private Database db;
+   private int userId;
+   int win_bot = 0;
+   int lose_bot = 0;
 
    // Define properties (package-visible)
    /** Composes of 2D array of ROWS-by-COLS Cell instances */
    Cell[][] cells;
 
    /** Constructor to initialize the game board */
-   public Board() {
+   public Board(Database db, int userId) {
+      this.db = db;
+      this.userId = userId;
       initGame();
    }
 
@@ -49,38 +56,53 @@ public class Board {
     *  Update cells[selectedRow][selectedCol]. Compute and return the
     *  new game state (PLAYING, DRAW, CROSS_WON, NOUGHT_WON).
     */
-   public State stepGame(Seed player, int selectedRow, int selectedCol) {
-      // Update game board
-      cells[selectedRow][selectedCol].content = player;
+  public State stepGame(Seed player, int selectedRow, int selectedCol, boolean botGame) {
+    cells[selectedRow][selectedCol].content = player;
 
-      // Compute and return the new game state
-      if (cells[selectedRow][0].content == player  // 3-in-the-row
-                && cells[selectedRow][1].content == player
-                && cells[selectedRow][2].content == player
-             || cells[0][selectedCol].content == player // 3-in-the-column
-                && cells[1][selectedCol].content == player
-                && cells[2][selectedCol].content == player
-             || selectedRow == selectedCol     // 3-in-the-diagonal
-                && cells[0][0].content == player
-                && cells[1][1].content == player
-                && cells[2][2].content == player
-             || selectedRow + selectedCol == 2 // 3-in-the-opposite-diagonal
-                && cells[0][2].content == player
-                && cells[1][1].content == player
-                && cells[2][0].content == player) {
-         return (player == Seed.CROSS) ? State.CROSS_WON : State.NOUGHT_WON;
-      } else {
-         // Nobody win. Check for DRAW (all cells occupied) or PLAYING.
-         for (int row = 0; row < ROWS; ++row) {
-            for (int col = 0; col < COLS; ++col) {
-               if (cells[row][col].content == Seed.NO_SEED) {
-                  return State.PLAYING; // still have empty cells
-               }
+    boolean win = (
+        cells[selectedRow][0].content == player && cells[selectedRow][1].content == player && cells[selectedRow][2].content == player
+        || cells[0][selectedCol].content == player && cells[1][selectedCol].content == player && cells[2][selectedCol].content == player
+        || selectedRow == selectedCol && cells[0][0].content == player && cells[1][1].content == player && cells[2][2].content == player
+        || selectedRow + selectedCol == 2 && cells[0][2].content == player && cells[1][1].content == player && cells[2][0].content == player
+    );
+
+    if (win && botGame) {
+        if (db != null) {
+            if (player == Seed.CROSS) {
+                db.incrementSoloWin(userId);
+            } else {
+                db.incrementSoloLose(userId);
             }
-         }
-         return State.DRAW; // no empty cell, it's a draw
-      }
+        }
+        return (player == Seed.CROSS) ? State.CROSS_WON : State.NOUGHT_WON;
+    }
+    if (win && !botGame) {
+        if (db != null) {
+            if (player == Seed.CROSS) {
+                db.incrementDuoWin(userId);
+            } else {
+                db.incrementDuoLose(userId);
+            }
+        }
+        return (player == Seed.CROSS) ? State.CROSS_WON : State.NOUGHT_WON;
+    }
+
+    for (int row = 0; row < ROWS; ++row) {
+        for (int col = 0; col < COLS; ++col) {
+            if (cells[row][col].content == Seed.NO_SEED) {
+                return State.PLAYING;
+            }
+        }
+    }
+
+   if(botGame){
+      db.incrementSoloDraw(userId);
+   }else{
+      db.incrementDuoDraw(userId);
    }
+    return State.DRAW;
+}
+
 
    /** Paint itself on the graphics canvas, given the Graphics context */
    public void paint(Graphics g) {
