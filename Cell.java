@@ -29,23 +29,51 @@ public class Cell {
    }
 
    /** Paint itself on the graphics canvas, given the Graphics context */
-   public void paint(Graphics g) {
+   public void paint(Graphics g, PionShape p1, PionShape p2) {
       // Use Graphics2D which allows us to set the pen's stroke
       Graphics2D g2d = (Graphics2D)g;
       g2d.setStroke(new BasicStroke(SEED_STROKE_WIDTH,
             BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+
       // Draw the Seed if it is not empty
       int x1 = col * SIZE + PADDING;
       int y1 = row * SIZE + PADDING;
+      int cellX = col * SIZE;
+      int cellY = row * SIZE;
+
       if (content == Seed.CROSS) {
          g2d.setColor(GameMain.COLOR_CROSS);  // draw a 2-line cross
+
+         if (p1 == PionShape.X) {
          int x2 = (col + 1) * SIZE - PADDING;
-         int y2 = (row + 1) * SIZE - PADDING;
+         int y2 = (row + 1) * SIZE - PADDING; 
          g2d.drawLine(x1, y1, x2, y2);
          g2d.drawLine(x2, y1, x1, y2);
+         } else {
+         g2d.setFont(new Font("Arial Unicode MS", Font.BOLD, SIZE / 2));
+         FontMetrics fm = g2d.getFontMetrics();
+         String symbol = p1.getSymbol();
+         int textWidth = fm.stringWidth(symbol);
+         int textHeight = fm.getAscent(); // jarak dari baseline ke atas huruf
+         int textX = cellX + (Cell.SIZE - textWidth) / 2;
+         int textY = cellY + (Cell.SIZE + textHeight) / 2 - 5; // -5 agar tidak terlalu bawah
+         g2d.drawString(symbol, textX, textY);
+         } 
       } else if (content == Seed.NOUGHT) {  // draw a circle
          g2d.setColor(GameMain.COLOR_NOUGHT);
+
+         if (p2 == PionShape.O) {
          g2d.drawOval(x1, y1, SEED_SIZE, SEED_SIZE);
+         } else {
+         g2d.setFont(new Font("Arial Unicode MS", Font.BOLD, SIZE / 2));
+         FontMetrics fm = g2d.getFontMetrics();
+         String symbol = p2.getSymbol();
+         int textWidth = fm.stringWidth(symbol);
+         int textHeight = fm.getAscent(); // jarak dari baseline ke atas huruf
+         int textX = cellX + (Cell.SIZE - textWidth) / 2;
+         int textY = cellY + (Cell.SIZE + textHeight) / 2 - 5; // -5 agar tidak terlalu bawah
+         g2d.drawString(symbol, textX, textY);  
+         }
       }
    }
 }

@@ -10,8 +10,8 @@ public class GameMain extends JPanel {
     public static final String TITLE = "Tic Tac Toe";
     public static final Color COLOR_BG = Color.WHITE;
     public static final Color COLOR_BG_STATUS = new Color(216, 216, 216);
-    public static final Color COLOR_CROSS = new Color(239, 105, 80);
-    public static final Color COLOR_NOUGHT = new Color(64, 154, 225);
+    public static final Color COLOR_CROSS = new Color(187, 216, 163);
+    public static final Color COLOR_NOUGHT = new Color(111, 130, 106);
     public static final Font FONT_STATUS = new Font("OCR A Extended", Font.PLAIN, 14);
 
     private Board board;
@@ -21,6 +21,9 @@ public class GameMain extends JPanel {
     
     private Database db;
     private int userId;
+
+    private PionShape player1Shape;
+    private PionShape player2Shape;
 
     private JLabel statusBar;
     private Timer turnTimer;
@@ -189,6 +192,32 @@ public class GameMain extends JPanel {
         currentPlayer = Seed.CROSS;
         currentState = State.PLAYING;
         startTimerForTurn();
+
+       String[] pionOptions = {"X", "O", "♥", "★", "☀"};
+
+         String p1Choice = (String) JOptionPane.showInputDialog(
+            null,
+            "Pilih pion untuk Player 1 (X):",
+            "Pilih Pion",
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            pionOptions,
+            pionOptions[0]);
+
+         String p2Choice = (String) JOptionPane.showInputDialog(
+            null,
+            "Pilih pion untuk Player 2 (O):",
+            "Pilih Pion",
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            pionOptions,
+            pionOptions[1]);
+
+         player1Shape = PionShape.fromString(p1Choice);
+         player2Shape = PionShape.fromString(p2Choice);
+
+         board.setShape(player1Shape, player2Shape);
+ 
         repaint();
     }
     
@@ -214,7 +243,7 @@ public class GameMain extends JPanel {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         setBackground(COLOR_BG);
-        board.paint(g);
+        board.paint(g, player1Shape, player2Shape);
 
         if (currentState == State.PLAYING) {
             statusBar.setForeground(Color.BLACK);

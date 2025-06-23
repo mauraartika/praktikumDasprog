@@ -13,16 +13,24 @@ public class Board {
     public static final int GRID_WIDTH_HALF = GRID_WIDTH / 2;
     public static final Color COLOR_GRID = Color.LIGHT_GRAY;
     public static final int Y_OFFSET = 1;
+    
     private Database db;
     private int userId;
+    private PionShape player1Shape;
+    private PionShape player2Shape;
 
-    Cell[][] cells;
+    public Cell[][] cells; 
+    public void setShape(PionShape p1, PionShape p2) {
+      this.player1Shape = p1;
+      this.player2Shape = p2;
+   }
 
     public Board(Database db, int userId) {
         this.db = db;
         this.userId = userId;
         initGame();
     }
+    
 
     public void initGame() {
         cells = new Cell[ROWS][COLS];
@@ -115,7 +123,7 @@ public class Board {
         worker.execute();
     }
 
-    public void paint(Graphics g) {
+    public void paint(Graphics g, PionShape player1Shape, PionShape player2Shape) {
         g.setColor(COLOR_GRID);
         for (int row = 1; row < ROWS; ++row) {
             g.fillRoundRect(0, Cell.SIZE * row - GRID_WIDTH_HALF, CANVAS_WIDTH - 1, GRID_WIDTH, GRID_WIDTH, GRID_WIDTH);
@@ -125,7 +133,7 @@ public class Board {
         }
         for (int row = 0; row < ROWS; ++row) {
             for (int col = 0; col < COLS; ++col) {
-                cells[row][col].paint(g);
+                cells[row][col].paint(g, player1Shape, player2Shape);
             }
         }
     }
