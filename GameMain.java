@@ -3,326 +3,221 @@ import java.awt.event.*;
 import java.util.Random;
 import javax.swing.*;
 import io.github.cdimascio.dotenv.Dotenv;
+
 public class GameMain extends JPanel {
-   private static final long serialVersionUID = 1L;
-   private GameMode gameMode;
+    private static final long serialVersionUID = 1L;
+    
+    public static final String TITLE = "Tic Tac Toe";
+    public static final Color COLOR_BG = Color.WHITE;
+    public static final Color COLOR_BG_STATUS = new Color(216, 216, 216);
+    public static final Color COLOR_CROSS = new Color(239, 105, 80);
+    public static final Color COLOR_NOUGHT = new Color(64, 154, 225);
+    public static final Font FONT_STATUS = new Font("OCR A Extended", Font.PLAIN, 14);
 
-   public static final String TITLE = "Tic Tac Toe";
-   public static final Color COLOR_BG = Color.WHITE;
-   public static final Color COLOR_BG_STATUS = new Color(216, 216, 216);
-   public static final Color COLOR_CROSS = new Color(239, 105, 80);
-   public static final Color COLOR_NOUGHT = new Color(64, 154, 225);
-   public static final Font FONT_STATUS = new Font("OCR A Extended", Font.PLAIN, 14);
+    private Board board;
+    private State currentState;
+    private Seed currentPlayer;
+    private GameMode gameMode;
+    
+    private Database db;
+    private int userId;
 
-   private Board board;
-   private State currentState;
-   private Seed currentPlayer;
-   private JLabel statusBar;
-   private JComboBox<String> timerSelector;
-   private Timer turnTimer;
-   private int timeLeft;
-   private boolean timerEnabled = true;
-   private Database db;
-   private int userId;
+    private JLabel statusBar;
+    private Timer turnTimer;
+    private int timeLeft;
+    private int timerSetting;
 
+    public GameMain(Database db, int userId) {
+        this.db = db;
+        this.userId = userId;
 
-   public GameMain(Database db, int userId) {
-      this.db = db;
-      this.userId = userId;
-      String[] options = { "Solo (vs. Bot)", "Duo (2 Players)" };
-      int choice = JOptionPane.showOptionDialog(
-            null,
-            "Pilih mode permainan:",
-            "Mode Permainan",
-            JOptionPane.DEFAULT_OPTION,
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            options,
-            options[0]);
-      gameMode = (choice == 0) ? GameMode.SOLO : GameMode.DUO;
+        String[] options = { "Solo (vs. Bot)", "Duo (2 Players)" };
+        int choice = JOptionPane.showOptionDialog(
+                null,
+                "Pilih mode permainan:",
+                "Mode Permainan",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]);
+        
+        if (choice == -1) {
+            System.exit(0);
+        }
+        gameMode = (choice == 0) ? GameMode.SOLO : GameMode.DUO;
 
-      addMouseListener(new MouseAdapter() {
-         @Override
-         public void mouseClicked(MouseEvent e) {
-            int mouseX = e.getX();
-            int mouseY = e.getY();
-            int row = mouseY / Cell.SIZE;
-            int col = mouseX / Cell.SIZE;
+        JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+        TimerSetupDialog timerDialog = new TimerSetupDialog(parentFrame);
+        this.timerSetting = timerDialog.showDialog();
+        if (this.timerSetting == 0) {
+            this.timerSetting = -1;
+        }
 
-            if (currentState == State.PLAYING) {
-               if (row >= 0 && row < Board.ROWS && col >= 0 && col < Board.COLS &&
-                   board.cells[row][col].content == Seed.NO_SEED) {
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int mouseX = e.getX();
+                int mouseY = e.getY();
+                int row = mouseY / Cell.SIZE;
+                int col = mouseX / Cell.SIZE;
 
-                  currentState = board.stepGame(currentPlayer, row, col, gameMode == GameMode.SOLO);
+                if (currentState == State.PLAYING) {
+                    if (row >= 0 && row < Board.ROWS && col >= 0 && col < Board.COLS &&
+                        board.cells[row][col].content == Seed.NO_SEED) {
+                        
+                        currentState = board.stepGame(currentPlayer, row, col, gameMode == GameMode.SOLO);
 
-                  if (currentState == State.PLAYING) {
-                     if (gameMode == GameMode.SOLO) {
-                        currentPlayer = Seed.NOUGHT;
-                        makeBotMove();
-                     } else {
-                        currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
-                        startTimerForTurn();
-                     }
-                  }
-               }
-            } else {
-               newGame();
+                        if (currentState == State.PLAYING) {
+                            if (gameMode == GameMode.SOLO) {
+                                currentPlayer = Seed.NOUGHT;
+                                makeBotMove();
+                            } else {
+                                currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
+                                startTimerForTurn();
+                            }
+                        }
+                    }
+                } else {
+                    newGame();
+                }
+                repaint();
             }
+        });
+
+        statusBar = new JLabel("Selamat Datang!");
+        statusBar.setFont(FONT_STATUS);
+        statusBar.setBackground(COLOR_BG_STATUS);
+        statusBar.setOpaque(true);
+        statusBar.setPreferredSize(new Dimension(300, 30));
+        statusBar.setHorizontalAlignment(JLabel.LEFT);
+        statusBar.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 12));
+
+        setLayout(new BorderLayout());
+        add(statusBar, BorderLayout.PAGE_END); 
+        setPreferredSize(new Dimension(Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT + 30));
+        setBorder(BorderFactory.createLineBorder(COLOR_BG_STATUS, 2, false));
+
+        initGame();
+        newGame();
+    }
+
+    private void makeBotMove() {
+        Timer botDelay = new Timer(500, e -> {
+            Random rand = new Random();
+            int row, col;
+            do {
+                row = rand.nextInt(Board.ROWS);
+                col = rand.nextInt(Board.COLS);
+            } while (board.cells[row][col].content != Seed.NO_SEED);
+
+            currentState = board.stepGame(currentPlayer, row, col, true);
+            currentPlayer = Seed.CROSS;
+            startTimerForTurn();
             repaint();
-         }
-      });
+        });
+        botDelay.setRepeats(false);
+        botDelay.start();
+    }
 
-      // Timer Selector
-      timerSelector = new JComboBox<>(new String[]{"Tanpa Batas", "5", "10", "15", "30"});
-      timerSelector.setSelectedIndex(1); // default 5s
-      timerSelector.addActionListener(e -> {
-         String selected = (String) timerSelector.getSelectedItem();
-         if (selected.equals("Tanpa Batas")) {
-            timerEnabled = false;
-            statusBar.setText("Mode: Tanpa Batas Waktu");
-         } else {
-            timerEnabled = true;
-            timeLeft = Integer.parseInt(selected);
-         }
-      });
-
-      // Status Bar
-      statusBar = new JLabel();
-      statusBar.setFont(FONT_STATUS);
-      statusBar.setBackground(COLOR_BG_STATUS);
-      statusBar.setOpaque(true);
-      statusBar.setPreferredSize(new Dimension(300, 30));
-      statusBar.setHorizontalAlignment(JLabel.LEFT);
-      statusBar.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 12));
-
-      setLayout(new BorderLayout());
-      add(timerSelector, BorderLayout.PAGE_START);
-      add(statusBar, BorderLayout.PAGE_END);
-      setPreferredSize(new Dimension(Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT + 30));
-      setBorder(BorderFactory.createLineBorder(COLOR_BG_STATUS, 2, false));
-
-      // Turn Timer
-      turnTimer = new Timer(1000, new ActionListener() {
-         public void actionPerformed(ActionEvent evt) {
-            if (!timerEnabled || currentState != State.PLAYING) return;
-
-            timeLeft--;
-            statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
-
-            if (timeLeft <= 0) {
-               turnTimer.stop();
-               statusBar.setText("Waktu habis! Otomatis lewati giliran.");
-               if (gameMode == GameMode.DUO) {
-                  currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
-               } else if (gameMode == GameMode.SOLO && currentPlayer == Seed.CROSS) {
-                  currentPlayer = Seed.NOUGHT;
-                  makeBotMove();
-               }
-               startTimerForTurn();
-               repaint();
-            }
-         }
-      });
-      timerSelector = new JComboBox<>(new String[]{"Tanpa Batas", "5", "10", "15", "30"});
-      timerSelector.setSelectedIndex(1); // Default 5 detik
-      timerSelector.addActionListener(e -> {
-         String selected = (String) timerSelector.getSelectedItem();
-         if (selected.equals("Tanpa Batas")) {
-            timerEnabled = false;
-            statusBar.setText("Mode: Tanpa Batas Waktu");
-         } else {
-            timerEnabled = true;
-            timeLeft = Integer.parseInt(selected);
-         }
-      });
-
-      timerSelector = new JComboBox<>(new String[]{"Tanpa Batas", "5", "10", "15", "30"});
-      timerSelector.setSelectedIndex(1); // Default 5 detik
-      timerSelector.addActionListener(e -> {
-         String selected = (String) timerSelector.getSelectedItem();
-         if (selected.equals("Tanpa Batas")) {
-            timerEnabled = false;
-            statusBar.setText("Mode: Tanpa Batas Waktu");
-         } else {
-            timerEnabled = true;
-            timeLeft = Integer.parseInt(selected);
-         }
-      });
-
-      super.setLayout(new BorderLayout());
-      super.add(timerSelector, BorderLayout.PAGE_START);
-      super.add(timerSelector, BorderLayout.PAGE_START);
-      super.add(statusBar, BorderLayout.PAGE_END);
-      super.setPreferredSize(new Dimension(Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT + 30));
-      super.setBorder(BorderFactory.createLineBorder(COLOR_BG_STATUS, 2, false));
-
-      turnTimer = new Timer(1000, new ActionListener() {
-         public void actionPerformed(ActionEvent evt) {
-            if (!timerEnabled || currentState != State.PLAYING) return;
-
-            timeLeft--;
-            statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
-
-            if (timeLeft <= 0) {
-               turnTimer.stop();
-               if (gameMode == GameMode.SOLO && currentPlayer == Seed.NOUGHT) {
-                  makeBotMove(); // bot langsung main
-               } else {
-                  // Ganti giliran player manual
-                  currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
-               }
-               repaint();
-               startTimerForTurn(); // reset untuk giliran selanjutnya
-            }
-         }
-      });
-      turnTimer = new Timer(1000, new ActionListener() {
-         public void actionPerformed(ActionEvent evt) {
-            if (!timerEnabled || currentState != State.PLAYING) return;
-
-            timeLeft--;
-            statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
-
-            if (timeLeft <= 0) {
-               turnTimer.stop();
-               if (gameMode == GameMode.SOLO && currentPlayer == Seed.NOUGHT) {
-                  makeBotMove(); // bot langsung main
-               } else {
-                  // Ganti giliran player manual
-                  currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
-               }
-               repaint();
-               startTimerForTurn(); // reset untuk giliran selanjutnya
-            }
-         }
-      });
-      initGame();
-      newGame();
-   }
-
+    private void startTimerForTurn() {
+        if (turnTimer != null) {
+            turnTimer.stop();
+        }
  
+        if (timerSetting <= 0 || currentState != State.PLAYING) {
+            updateStatusText();
+            return;
+        }
 
-   // START YOSSI
-   // START YOSSI
-   private void makeBotMove() {
-      Random rand = new Random();
-      int row, col;
+        timeLeft = timerSetting; 
+        updateStatusText();
 
-
-      do {
-         row = rand.nextInt(Board.ROWS);
-         col = rand.nextInt(Board.COLS);
-      } while (board.cells[row][col].content != Seed.NO_SEED);
-
-      board.cells[row][col].content = currentPlayer;
-      currentState = board.stepGame(currentPlayer, row, col, true);
-
-      if (currentState == State.PLAYING) {
-         currentPlayer = Seed.CROSS;
-         startTimerForTurn(); //Mulai timer setelah bot selesai
-      }
-
-      repaint();
-   }
-
-   
-   private void startTimerForTurn() {
-      if (!timerEnabled || currentState != State.PLAYING) {
-         if (turnTimer != null) {
-            turnTimer.stop();
-         }
-         return;
-      }
-
-      String selected = (String) timerSelector.getSelectedItem();
-      if (selected.equals("Tanpa Batas")) {
-         timerEnabled = false;
-         statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - ∞");
-         if (turnTimer != null) {
-            turnTimer.stop();
-         }
-      } else {
-         timerEnabled = true;
-         timeLeft = Integer.parseInt(selected);
-         statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
-
-         if (turnTimer != null) {
-            turnTimer.stop();
-         }
-
-         // Mulai ulang timer
-         turnTimer = new Timer(1000, e -> {
+        turnTimer = new Timer(1000, e -> {
             timeLeft--;
+            updateStatusText();
             if (timeLeft <= 0) {
-               ((Timer) e.getSource()).stop();
-               statusBar.setText("Waktu habis! Otomatis lewati giliran.");
-               if (gameMode == GameMode.DUO) {
-                  currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
-               } else if (gameMode == GameMode.SOLO && currentPlayer == Seed.CROSS) {
-                  currentPlayer = Seed.NOUGHT;
-                  makeBotMove();
-               }
-               startTimerForTurn();
-               repaint();
-            } else {
-               statusBar.setText((currentPlayer == Seed.CROSS ? "X" : "O") + "'s Turn - Waktu: " + timeLeft + "s");
+                ((Timer)e.getSource()).stop();
+                JOptionPane.showMessageDialog(this, "Waktu habis! Giliran dilewati.", "Waktu Habis", JOptionPane.WARNING_MESSAGE);
+                
+                currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
+                
+                if (gameMode == GameMode.SOLO) {
+                    makeBotMove();
+                } else {
+                    startTimerForTurn();
+                    repaint();
+                }
             }
-         });
-         turnTimer.start();
-      }
-   }
+        });
+        turnTimer.start();
+    }
+    
+    public void initGame() {
+        board = new Board(db, userId);
+    }
 
-   // END YOSSI
+    public void newGame() {
+        for (int row = 0; row < Board.ROWS; ++row) {
+            for (int col = 0; col < Board.COLS; ++col) {
+                board.cells[row][col].content = Seed.NO_SEED;
+            }
+        }
+        currentPlayer = Seed.CROSS;
+        currentState = State.PLAYING;
+        startTimerForTurn();
+        repaint();
+    }
+    
+    private void updateStatusText() {
+        String text;
+        if (currentState == State.PLAYING) {
+            text = (currentPlayer == Seed.CROSS) ? "X's Turn" : "O's Turn";
+            if (timerSetting > 0) {
+                text += " | Waktu: " + timeLeft + "s";
+            }
+        } else {
+             switch (currentState) {
+                case DRAW:       text = "Seri! Klik untuk main lagi."; break;
+                case CROSS_WON:  text = "'X' Menang! Klik untuk main lagi."; break;
+                case NOUGHT_WON: text = "'O' Menang! Klik untuk main lagi."; break;
+                default:         text = ""; break;
+            }
+        }
+        statusBar.setText(text);
+    }
 
+    @Override
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        setBackground(COLOR_BG);
+        board.paint(g);
 
-   public void initGame() {
-      board = new Board(db, userId);
-   }
+        if (currentState == State.PLAYING) {
+            statusBar.setForeground(Color.BLACK);
+        } else {
+            statusBar.setForeground(Color.RED);
+        }
+        updateStatusText();
+    }
 
-   public void newGame() {
-      for (int row = 0; row < Board.ROWS; ++row) {
-         for (int col = 0; col < Board.COLS; ++col) {
-            board.cells[row][col].content = Seed.NO_SEED;
-         }
-      }
-      currentPlayer = Seed.CROSS;
-      currentState = State.PLAYING;
-      startTimerForTurn();
-   }
-
-   @Override
-   public void paintComponent(Graphics g) {
-      super.paintComponent(g);
-      setBackground(COLOR_BG);
-      board.paint(g);
-
-      if (currentState == State.PLAYING) {
-         statusBar.setForeground(Color.BLACK);
-         statusBar.setText((currentPlayer == Seed.CROSS) ? "X's Turn" : "O's Turn");
-      } else if (currentState == State.DRAW) {
-         statusBar.setForeground(Color.RED);
-         statusBar.setText("It's a Draw! Click to play again.");
-      } else if (currentState == State.CROSS_WON) {
-         statusBar.setForeground(Color.RED);
-         statusBar.setText("'X' Won! Click to play again.");
-      } else if (currentState == State.NOUGHT_WON) {
-         statusBar.setForeground(Color.RED);
-         statusBar.setText("'O' Won! Click to play again.");
-      }
-   }
-
-   public static void main(String[] args) {
-      // Sebaiknya pakai .env atau config luar
-      Dotenv dotenv = Dotenv.load();
-      Database db = new Database(
-       dotenv.get("DB_USER"),
-       dotenv.get("DB_PASSWORD"),
-       Integer.parseInt(dotenv.get("DB_PORT")),
-       dotenv.get("DB_HOST"),
-       dotenv.get("DB_NAME")
-      );
-
-      LoginPage lg = new LoginPage();
-      lg.displayLogin(db);
-   }
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+                Database db = new Database(
+                        dotenv.get("DB_USER", "root"),
+                        dotenv.get("DB_PASSWORD", ""),
+                        Integer.parseInt(dotenv.get("DB_PORT", "3306")),
+                        dotenv.get("DB_HOST", "localhost"),
+                        dotenv.get("DB_NAME", "tic_tac_toe")
+                );
+                LoginPage lg = new LoginPage();
+                lg.displayLogin(db);
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Terjadi kesalahan fatal saat memulai aplikasi.\n" + e.getMessage(), "Application Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+    }
 }
