@@ -31,7 +31,7 @@ public class Home extends JFrame {
         buttonPanel.add(playButton);
 
         achievementButton = new JButton("Achievements");
-        achievementButton.setBackground(new Color(0, 123, 255)); // Biru (seperti bootstrap primary)
+        achievementButton.setBackground(new Color(0, 123, 255)); 
         achievementButton.setForeground(Color.WHITE);
         achievementButton.setFocusPainted(false);
         achievementButton.setFont(new Font("Arial", Font.BOLD, 14));
@@ -44,7 +44,7 @@ public class Home extends JFrame {
             dispose();
             SwingUtilities.invokeLater(() -> {
                  JFrame frame = new JFrame("Tic tac toe.");
-                 frame.setContentPane(new GameMain(db , userId));
+                 frame.setContentPane(new GameMain(username,db , userId));
                  frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                  frame.pack();
                  frame.setLocationRelativeTo(null);

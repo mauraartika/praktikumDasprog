@@ -1,3 +1,3 @@
-public enum GameMode{   // to save as "Seed.java"
+public enum GameMode{   
     SOLO , DUO;    
 }

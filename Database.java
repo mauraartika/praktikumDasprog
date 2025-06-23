@@ -39,7 +39,7 @@ public class Database {
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                loggedInUserId = rs.getInt("user_id"); // Simpan ID
+                loggedInUserId = rs.getInt("user_id"); 
                 return true;
             } else {
                 return false;

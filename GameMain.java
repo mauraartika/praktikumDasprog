@@ -26,11 +26,11 @@ public class GameMain extends JPanel {
     private Timer turnTimer;
     private int timeLeft;
     private int timerSetting;
-
-    public GameMain(Database db, int userId) {
+    private JButton backButton;
+    
+    public GameMain(String username,Database db, int userId) {
         this.db = db;
         this.userId = userId;
-
         String[] options = { "Solo (vs. Bot)", "Duo (2 Players)" };
         int choice = JOptionPane.showOptionDialog(
                 null,
@@ -85,19 +85,42 @@ public class GameMain extends JPanel {
             }
         });
 
+        backButton = new JButton("Back"); 
+        backButton.setFont(new Font("Arial", Font.BOLD, 12));
+        backButton.setFocusable(false);
+        backButton.setBackground(Color.RED); 
+        backButton.setForeground(Color.WHITE);
+        
         statusBar = new JLabel("Selamat Datang!");
         statusBar.setFont(FONT_STATUS);
-        statusBar.setBackground(COLOR_BG_STATUS);
-        statusBar.setOpaque(true);
-        statusBar.setPreferredSize(new Dimension(300, 30));
+        statusBar.setOpaque(false);
         statusBar.setHorizontalAlignment(JLabel.LEFT);
         statusBar.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 12));
 
-        setLayout(new BorderLayout());
-        add(statusBar, BorderLayout.PAGE_END); 
-        setPreferredSize(new Dimension(Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT + 30));
-        setBorder(BorderFactory.createLineBorder(COLOR_BG_STATUS, 2, false));
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setBackground(COLOR_BG_STATUS); 
+        bottomPanel.setPreferredSize(new Dimension(Board.CANVAS_WIDTH, 35)); 
 
+        bottomPanel.add(statusBar, BorderLayout.CENTER); 
+        bottomPanel.add(backButton, BorderLayout.EAST);  
+
+        setLayout(new BorderLayout());
+        add(bottomPanel, BorderLayout.PAGE_END);
+        setPreferredSize(new Dimension(Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT + 35)); 
+        setBorder(BorderFactory.createLineBorder(COLOR_BG_STATUS, 2, false));
+        backButton.addActionListener(e -> {
+            JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
+
+            if (frame != null) {
+               frame.dispose();
+            }
+
+            SwingUtilities.invokeLater(() -> {
+      
+               Home hm = new Home();
+               hm.displayHome(username ,db, userId); 
+            });
+        });
         initGame();
         newGame();
     }
@@ -204,7 +227,7 @@ public class GameMain extends JPanel {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
-                Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+                Dotenv dotenv = Dotenv.load();
                 Database db = new Database(
                         dotenv.get("DB_USER", "root"),
                         dotenv.get("DB_PASSWORD", ""),
