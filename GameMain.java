@@ -50,12 +50,15 @@ public class GameMain extends JPanel {
         }
         gameMode = (choice == 0) ? GameMode.SOLO : GameMode.DUO;
 
+
+
         JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
         TimerSetupDialog timerDialog = new TimerSetupDialog(parentFrame);
         this.timerSetting = timerDialog.showDialog();
         if (this.timerSetting == 0) {
             this.timerSetting = -1;
         }
+
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -78,6 +81,13 @@ public class GameMain extends JPanel {
                             } else {
                                 currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
                                 startTimerForTurn();
+                            }
+                        } else {
+                            PlaySound.stopGameSound();
+                            if (currentState == State.CROSS_WON || currentState == State.NOUGHT_WON) {
+                                PlaySound.playWinSound();
+                            } else if (currentState == State.DRAW) {
+                                PlaySound.playDrawSound();
                             }
                         }
                     }
@@ -111,22 +121,26 @@ public class GameMain extends JPanel {
         add(bottomPanel, BorderLayout.PAGE_END);
         setPreferredSize(new Dimension(Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT + 35)); 
         setBorder(BorderFactory.createLineBorder(COLOR_BG_STATUS, 2, false));
-        backButton.addActionListener(e -> {
-            JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
-
-            if (frame != null) {
-               frame.dispose();
+        backButton.addActionListener(e -> { 
+            if (turnTimer != null) {
+                turnTimer.stop();
             }
+            
+            JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this); 
+        
+            if (frame != null) { 
+                frame.dispose(); 
+            } 
 
-            SwingUtilities.invokeLater(() -> {
-      
-               Home hm = new Home();
-               hm.displayHome(username ,db, userId); 
-            });
+            SwingUtilities.invokeLater(() -> { 
+                Home hm = new Home(); 
+                hm.displayHome(username ,db, userId);  
+            }); 
         });
         initGame();
         newGame();
     }
+    
 
     private void makeBotMove() {
         Timer botDelay = new Timer(500, e -> {
@@ -212,6 +226,11 @@ public class GameMain extends JPanel {
             null,
             pionOptions,
             pionOptions[1]);
+
+         if (p1Choice == null || p2Choice == null) {
+            JOptionPane.showMessageDialog(this, "Pion tidak dipilih. Permainan dibatalkan.");
+            System.exit(0);
+         }
 
          player1Shape = PionShape.fromString(p1Choice);
          player2Shape = PionShape.fromString(p2Choice);

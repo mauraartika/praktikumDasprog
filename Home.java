@@ -15,7 +15,7 @@ public class Home extends JFrame {
         mainPanel.setBackground(GameMain.COLOR_BG);
 
         JLabel titleLabel = new JLabel("🎮 Selamat datang, " + username + "!", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        titleLabel.setFont(new Font("Segoe UI Emoji", Font.BOLD, 20));
         titleLabel.setForeground(new Color(50, 50, 50));
         mainPanel.add(titleLabel, BorderLayout.NORTH);
 
@@ -50,6 +50,7 @@ public class Home extends JFrame {
                  frame.setLocationRelativeTo(null);
                  frame.setVisible(true);
             });
+            PlaySound.playGameStartSound();
         });
         achievementButton.addActionListener(e -> {
             dispose();

@@ -17,7 +17,7 @@ public class Achivement extends JFrame {
 
         // Title
         JLabel title = new JLabel("🏆 Achivement of " +username.substring(0,1).toUpperCase() +username.substring(1).toLowerCase(), SwingConstants.CENTER);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setFont(new Font("Segoe UI Emoji", Font.BOLD, 22));
         title.setForeground(new Color(44, 62, 80));
         mainPanel.add(title, BorderLayout.NORTH);
 
@@ -26,8 +26,8 @@ public class Achivement extends JFrame {
         statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.Y_AXIS));
         statsPanel.setBackground(new Color(245, 248, 250));
 
-        Font sectionFont = new Font("Segoe UI", Font.BOLD, 15);
-        Font statFont = new Font("Segoe UI", Font.PLAIN, 14);
+        Font sectionFont = new Font("Segoe UI Emoji", Font.BOLD, 15);
+        Font statFont = new Font("Segoe UI Emoji", Font.PLAIN, 14);
         Color labelColor = new Color(60, 60, 60);
 
         // SOLO Stats
@@ -61,14 +61,14 @@ public class Achivement extends JFrame {
         // Total Games Label (Bottom Center)
         int totalGames = stats.getSoloGame() + stats.getDuoGame();
         JLabel totalGamesLabel = new JLabel("🎯 Total Games Played: " + totalGames, SwingConstants.CENTER);
-        totalGamesLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        totalGamesLabel.setFont(new Font("Segoe UI Emoji", Font.BOLD, 16));
         totalGamesLabel.setForeground(new Color(52, 73, 94));
         totalGamesLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
         // Back button
         JButton backButton = new JButton("Back");
         backButton.setFocusPainted(false);
-        backButton.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        backButton.setFont(new Font("Segoe UI Emoji", Font.BOLD, 13));
         backButton.setForeground(Color.WHITE);
         backButton.setBackground(new Color(231, 76, 60));
         backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));

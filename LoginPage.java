@@ -18,7 +18,7 @@ public class LoginPage extends JFrame {
 
         // Panel judul
         JLabel titleLabel = new JLabel("🧑 Login ke Game", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        titleLabel.setFont(new Font("Segoe UI Emoji", Font.BOLD, 20));
         titleLabel.setForeground(new Color(50, 50, 50));
         mainPanel.add(titleLabel, BorderLayout.NORTH);
 
