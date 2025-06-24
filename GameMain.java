@@ -71,7 +71,7 @@ public class GameMain extends JPanel {
                 if (currentState == State.PLAYING) {
                     if (row >= 0 && row < Board.ROWS && col >= 0 && col < Board.COLS &&
                         board.cells[row][col].content == Seed.NO_SEED) {
-                        
+                            
                         currentState = board.stepGame(currentPlayer, row, col, gameMode == GameMode.SOLO);
 
                         if (currentState == State.PLAYING) {
@@ -205,39 +205,19 @@ public class GameMain extends JPanel {
         }
         currentPlayer = Seed.CROSS;
         currentState = State.PLAYING;
+
+        PlaySound.playGameStartSound();
         startTimerForTurn();
-
-       String[] pionOptions = {"X", "O", "♥", "★", "☀"};
-
-         String p1Choice = (String) JOptionPane.showInputDialog(
-            null,
-            "Pilih pion untuk Player 1 (X):",
-            "Pilih Pion",
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            pionOptions,
-            pionOptions[0]);
-
-         String p2Choice = (String) JOptionPane.showInputDialog(
-            null,
-            "Pilih pion untuk Player 2 (O):",
-            "Pilih Pion",
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            pionOptions,
-            pionOptions[1]);
-
-         if (p1Choice == null || p2Choice == null) {
-            JOptionPane.showMessageDialog(this, "Pion tidak dipilih. Permainan dibatalkan.");
-            System.exit(0);
-         }
-
-         player1Shape = PionShape.fromString(p1Choice);
-         player2Shape = PionShape.fromString(p2Choice);
-
-         board.setShape(player1Shape, player2Shape);
  
         repaint();
+    }
+
+    public void setPlayerShapes(PionShape player1, PionShape player2) {
+        this.player1Shape = player1;
+        this.player2Shape = player2;
+        if (board != null) {
+            board.setShape(player1, player2);
+        }
     }
     
     private void updateStatusText() {

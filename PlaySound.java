@@ -8,12 +8,17 @@ private static Clip gameClip;
 
     public static void playGameStartSound() {
         try {
+
+            if (gameClip != null && gameClip.isRunning()) {
+                return;
+            }
+
         File soundFile = new File("C:\\Users\\ASUS\\Documents\\FP_Dasprog\\sounds\\Opening.wav");
 
         gameClip  = AudioSystem.getClip();
         gameClip.open(AudioSystem.getAudioInputStream(soundFile));
-        gameClip.start();
         gameClip.loop(Clip.LOOP_CONTINUOUSLY);
+        gameClip.start();
         
 
         } catch (Exception e) {
@@ -31,10 +36,6 @@ private static Clip gameClip;
 
     public static void playWinSound() {
         playSingleSound("C:\\Users\\ASUS\\Documents\\FP_Dasprog\\sounds\\Win.wav");
-    }
-
-    public static void playLoseSound() {
-        playSingleSound("C:\\Users\\ASUS\\Documents\\FP_Dasprog\\sounds\\Lose.wav");
     }
 
     public static void playDrawSound() {
