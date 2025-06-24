@@ -13,7 +13,11 @@ private static Clip gameClip;
                 return;
             }
 
+<<<<<<< HEAD
         File soundFile = new File("Sounds\\Opening.wav");
+=======
+        File soundFile = new File("./asset/sound/Opening.wav");
+>>>>>>> 05e85a16d9570cefc68adc6821bf4759294a6c17
 
         gameClip  = AudioSystem.getClip();
         gameClip.open(AudioSystem.getAudioInputStream(soundFile));
@@ -35,12 +39,20 @@ private static Clip gameClip;
     }
 
     public static void playWinSound() {
+<<<<<<< HEAD
         playSingleSound("Sounds\\Win.wav");
+=======
+        playSingleSound("./asset/sound/Win.wav");
+>>>>>>> 05e85a16d9570cefc68adc6821bf4759294a6c17
     }
 
     public static void playDrawSound() {
         try {
+<<<<<<< HEAD
         File soundFile = new File("Sounds\\Draw.wav");
+=======
+        File soundFile = new File("./asset/sound/Draw.wav");
+>>>>>>> 05e85a16d9570cefc68adc6821bf4759294a6c17
 
         gameClip = AudioSystem.getClip();
         gameClip.open(AudioSystem.getAudioInputStream(soundFile));
