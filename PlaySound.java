@@ -13,7 +13,7 @@ private static Clip gameClip;
                 return;
             }
 
-        File soundFile = new File("C:\\Users\\ASUS\\Documents\\FP_Dasprog\\sounds\\Opening.wav");
+        File soundFile = new File("Sounds\\Opening.wav");
 
         gameClip  = AudioSystem.getClip();
         gameClip.open(AudioSystem.getAudioInputStream(soundFile));
@@ -35,12 +35,12 @@ private static Clip gameClip;
     }
 
     public static void playWinSound() {
-        playSingleSound("C:\\Users\\ASUS\\Documents\\FP_Dasprog\\sounds\\Win.wav");
+        playSingleSound("Sounds\\Win.wav");
     }
 
     public static void playDrawSound() {
         try {
-        File soundFile = new File("C:\\Users\\ASUS\\Documents\\FP_Dasprog\\sounds\\Draw.wav");
+        File soundFile = new File("Sounds\\Draw.wav");
 
         gameClip = AudioSystem.getClip();
         gameClip.open(AudioSystem.getAudioInputStream(soundFile));
