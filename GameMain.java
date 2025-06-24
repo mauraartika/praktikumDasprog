@@ -125,7 +125,8 @@ public class GameMain extends JPanel {
             if (turnTimer != null) {
                 turnTimer.stop();
             }
-            
+            PlaySound.stopGameSound();
+
             JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this); 
         
             if (frame != null) { 
