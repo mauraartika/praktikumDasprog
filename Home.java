@@ -5,7 +5,6 @@ public class Home extends JFrame {
     private JButton playButton;
     private JButton achievementButton;
     private UserStats stats;
-    private JComboBox <String> pionComboBox;
     public Home() {
         super("Home");
     }
