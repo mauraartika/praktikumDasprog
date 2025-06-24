@@ -81,8 +81,12 @@ public class GameMain extends JPanel {
                             } else {
                                 currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
                                 startTimerForTurn();
+
                             }
                         } else {
+                             if (turnTimer != null) {
+                                turnTimer.stop();
+                            }
                             PlaySound.stopGameSound();
                             if (currentState == State.CROSS_WON || currentState == State.NOUGHT_WON) {
                                 PlaySound.playWinSound();
@@ -125,7 +129,8 @@ public class GameMain extends JPanel {
             if (turnTimer != null) {
                 turnTimer.stop();
             }
-            
+            PlaySound.stopGameSound();
+
             JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this); 
         
             if (frame != null) { 
@@ -194,7 +199,7 @@ public class GameMain extends JPanel {
     }
     
     public void initGame() {
-        board = new Board(db, userId, turnTimer);
+        board = new Board(db, userId);
     }
 
     public void newGame() {

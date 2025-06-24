@@ -17,17 +17,16 @@ public class Board {
     private int userId;
     private PionShape player1Shape;
     private PionShape player2Shape;
-    private Timer turnTimer; 
     public Cell[][] cells; 
     public void setShape(PionShape p1, PionShape p2) {
       this.player1Shape = p1;
       this.player2Shape = p2;
    }
 
-    public Board(Database db, int userId, Timer turnTimer) {
+    public Board(Database db, int userId) {
         this.db = db;
         this.userId = userId;
-        this.turnTimer = turnTimer;
+       
         initGame();
     }
     
@@ -61,9 +60,7 @@ public class Board {
 
         if (win) {
             updateStatisticsInBackground(player, botGame, false);
-            if(turnTimer != null){
-                turnTimer.stop();
-            }
+            
             return (player == Seed.CROSS) ? State.CROSS_WON : State.NOUGHT_WON;
             
         }
