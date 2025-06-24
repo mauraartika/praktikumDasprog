@@ -2,8 +2,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import javax.swing.SwingWorker; 
-
+import javax.swing.*;
 public class Board {
     public static final int ROWS = 3;
     public static final int COLS = 3;
@@ -18,16 +17,17 @@ public class Board {
     private int userId;
     private PionShape player1Shape;
     private PionShape player2Shape;
-
+    private Timer turnTimer; 
     public Cell[][] cells; 
     public void setShape(PionShape p1, PionShape p2) {
       this.player1Shape = p1;
       this.player2Shape = p2;
    }
 
-    public Board(Database db, int userId) {
+    public Board(Database db, int userId, Timer turnTimer) {
         this.db = db;
         this.userId = userId;
+        this.turnTimer = turnTimer;
         initGame();
     }
     
@@ -61,7 +61,11 @@ public class Board {
 
         if (win) {
             updateStatisticsInBackground(player, botGame, false);
+            if(turnTimer != null){
+                turnTimer.stop();
+            }
             return (player == Seed.CROSS) ? State.CROSS_WON : State.NOUGHT_WON;
+            
         }
 
         boolean isDraw = true;

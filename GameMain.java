@@ -194,7 +194,7 @@ public class GameMain extends JPanel {
     }
     
     public void initGame() {
-        board = new Board(db, userId);
+        board = new Board(db, userId, turnTimer);
     }
 
     public void newGame() {
@@ -270,5 +270,8 @@ public class GameMain extends JPanel {
                 JOptionPane.showMessageDialog(null, "Terjadi kesalahan fatal saat memulai aplikasi.\n" + e.getMessage(), "Application Error", JOptionPane.ERROR_MESSAGE);
             }
         });
+    }
+    public Timer getTimer(){
+        return this.turnTimer;
     }
 }
