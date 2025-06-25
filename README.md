@@ -2,7 +2,7 @@
 
 Project ini adalah implementasi permainan Tic-Tac-Toe berbasis Java console
 
-##Contributors
+## Contributors
 
 - Muhammad Rasyid Bomantoro Setya Putra 5026241192, Github :(Rasyid Devs)
 
