@@ -10,7 +10,7 @@ public class LoginPage extends JFrame {
         super("Login User");
     }
     public void displayLogin(Database db){
-        // Panel utama dengan padding
+        // Panel utama 
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout(20, 20));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
@@ -68,7 +68,7 @@ public class LoginPage extends JFrame {
             }
         });
         JLabel registerLabel = new JLabel("<HTML><U>Don't have an account? Register</U></HTML>");
-        registerLabel.setForeground(new Color(0, 102, 204)); // biru link
+        registerLabel.setForeground(new Color(0, 102, 204)); 
         registerLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         registerLabel.setFont(new Font("Arial", Font.PLAIN, 13));
 
@@ -76,7 +76,7 @@ public class LoginPage extends JFrame {
         registerLabel.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                dispose(); // Tutup jendela login
+                dispose(); 
                 javax.swing.SwingUtilities.invokeLater(() -> {
                     Register rg = new Register();
                     rg.displayRegister(db);

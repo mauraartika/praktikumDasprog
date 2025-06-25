@@ -45,11 +45,8 @@ public class GameMain extends JPanel {
                 options,
                 options[0]);
         
-        if (choice == -1) {
-            System.exit(0);
-        }
+        
         gameMode = (choice == 0) ? GameMode.SOLO : GameMode.DUO;
-
 
 
         JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
@@ -59,7 +56,7 @@ public class GameMain extends JPanel {
             this.timerSetting = -1;
         }
 
-
+        // Rasyid
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -101,7 +98,7 @@ public class GameMain extends JPanel {
                 repaint();
             }
         });
-
+        // Rasyid
         backButton = new JButton("Back"); 
         backButton.setFont(new Font("Arial", Font.BOLD, 12));
         backButton.setFocusable(false);
@@ -142,11 +139,11 @@ public class GameMain extends JPanel {
                 hm.displayHome(username ,db, userId);  
             }); 
         });
+        // Rasyid
         initGame();
         newGame();
     }
-    
-
+    // Rasyid
     private void makeBotMove() {
         Timer botDelay = new Timer(500, e -> {
             Random rand = new Random();
@@ -164,6 +161,7 @@ public class GameMain extends JPanel {
         botDelay.setRepeats(false);
         botDelay.start();
     }
+    // Rasyid
 
     private void startTimerForTurn() {
         if (turnTimer != null) {
@@ -276,7 +274,5 @@ public class GameMain extends JPanel {
             }
         });
     }
-    public Timer getTimer(){
-        return this.turnTimer;
-    }
+  
 }

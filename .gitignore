@@ -2,4 +2,4 @@
 
 # Ignore VS Code config
 .vscode/
-
+.env
