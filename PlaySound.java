@@ -1,4 +1,3 @@
-//import java.util.Scanner;
 import java.io.File;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -39,37 +38,15 @@ private static Clip gameClip;
     }
 
     public static void playDrawSound() {
-        try {
-        File soundFile = new File("./asset/sound/Draw.wav");
-
-        gameClip = AudioSystem.getClip();
-        gameClip.open(AudioSystem.getAudioInputStream(soundFile));
-        
-        //crop the sound at 2:06 - 2:09
-        gameClip.setMicrosecondPosition(126_000_000);
-        gameClip.start();
-
-            new Thread(() -> {
-                try {
-                    Thread.sleep(3000);
-                    gameClip.stop();
-                    gameClip.close();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }).start();
-        } catch (Exception e) {
-            System.out.println("Gagal memutar draw sound");
-            e.printStackTrace();
-        }
+       playSingleSound("./asset/sound/draw.wav");
     }   
 
     private static void playSingleSound(String path) {
         try {
             File soundFile = new File(path);
-            Clip clip = AudioSystem.getClip();
-            clip.open(AudioSystem.getAudioInputStream(soundFile));
-            clip.start();
+            gameClip = AudioSystem.getClip();
+            gameClip.open(AudioSystem.getAudioInputStream(soundFile));
+            gameClip.start();
         } catch (Exception e) {
             System.out.println("Gagal memutar sound efek.");
             e.printStackTrace();
